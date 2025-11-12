@@ -1,102 +1,129 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby Log</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baby Log 📋</title>
   <style>
+    :root {
+      --bg: #fff8ee;
+      --card: #ffffff;
+      --shadow: rgba(0,0,0,0.08);
+      --radius: 16px;
+      --font: "Poppins", sans-serif;
+    }
+
     body {
-      font-family: "Poppins", sans-serif;
-      background: #fffaf3;
+      font-family: var(--font);
+      background: var(--bg);
       color: #333;
       margin: 0;
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
 
     h1 {
-      color: #555;
-      font-size: 2em;
-      margin-bottom: 15px;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #444;
     }
 
     .buttons {
-      display: grid;
-      grid-template-columns: repeat(2, 150px);
-      gap: 15px;
-      margin-bottom: 25px;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 400px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
     button {
       border: none;
-      border-radius: 15px;
-      padding: 15px;
-      font-size: 1.1em;
-      cursor: pointer;
+      border-radius: var(--radius);
+      padding: 18px;
+      font-size: 1.2em;
       font-weight: 600;
-      transition: transform 0.1s ease, box-shadow 0.2s;
       color: #fff;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      box-shadow: 0 3px 6px var(--shadow);
+      width: 100%;
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    button:active {
+      transform: scale(0.97);
     }
 
-    .feed { background: #ffadad; }
-    .diaper { background: #ffd6a5; }
-    .sleep { background: #caffbf; color: #333; }
-    .wake { background: #9bf6ff; color: #333; }
+    .feed   { background: #ffb3b3; }
+    .diaper { background: #ffe08a; color: #333; }
+    .sleep  { background: #b8f1b0; color: #333; }
+    .wake   { background: #9ae6ff; color: #333; }
+    .clear  { background: #ff6961; }
 
     .log {
       width: 100%;
       max-width: 400px;
-      background: #ffffffcc;
-      border-radius: 15px;
-      padding: 15px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px var(--shadow);
+      padding: 15px;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
 
     .entry {
-      font-size: 1.3em;
-      padding: 8px 0;
-      border-bottom: 1px solid #ddd;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 1.1em;
     }
 
     .entry:last-child {
       border-bottom: none;
     }
 
-    .time {
-      font-weight: bold;
-      color: #444;
+    .category {
+      font-weight: 600;
+      font-size: 1em;
+      color: #666;
     }
 
-    .category {
-      font-style: italic;
-      color: #666;
+    .time {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #333;
     }
 
     .last-update {
       font-size: 0.9em;
-      color: #aaa;
+      color: #888;
       margin-top: 10px;
       text-align: center;
+    }
+
+    @media (min-width: 480px) {
+      h1 { font-size: 2em; }
+      .entry { font-size: 1.2em; }
+      button { font-size: 1.3em; }
     }
   </style>
 </head>
 <body>
-  <h1>🍼 Baby Log</h1>
+  <h1>👶 Baby Log</h1>
 
   <div class="buttons">
     <button class="feed">🍼 Papanie</button>
     <button class="diaper">🧷 Prebalenie</button>
     <button class="sleep">😴 Zaspal</button>
     <button class="wake">🌞 Zobudil sa</button>
+    <button class="clear">🗑️ Vymazať všetko</button>
   </div>
 
   <div class="log" id="log"></div>
@@ -105,11 +132,12 @@
   <script>
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
-    const buttons = document.querySelectorAll('button');
+    const buttons = document.querySelectorAll('button:not(.clear)');
+    const clearButton = document.querySelector('.clear');
 
     function getTime() {
       const now = new Date();
-      return now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     function loadLog() {
@@ -117,7 +145,7 @@
       const lastReset = localStorage.getItem('lastReset');
       const now = Date.now();
 
-      // reset after 24h (except last entries)
+      // reset po 24h
       if (lastReset && now - lastReset > 24 * 60 * 60 * 1000) {
         const latest = {};
         saved.forEach(e => { latest[e.category] = e; });
@@ -139,11 +167,13 @@
       log.slice().reverse().forEach(entry => {
         const div = document.createElement('div');
         div.className = 'entry';
-        div.innerHTML = `<span class="category">${entry.category}</span><span class="time">${entry.time}</span>`;
+        div.innerHTML = `<span class="category">${entry.category}</span>
+                         <span class="time">${entry.time}</span>`;
         logContainer.appendChild(div);
       });
-      lastUpdateEl.textContent = log.length > 0 ? 
-        `Posledná aktualizácia: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}` : '';
+      lastUpdateEl.textContent = log.length
+        ? `Posledná aktualizácia: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : '';
     }
 
     let log = loadLog();
@@ -157,6 +187,18 @@
         saveLog(log);
         renderLog(log);
       });
+    });
+
+    // CLEAR tlačidlo s potvrdením
+    clearButton.addEventListener('click', () => {
+      const confirmClear = confirm('Naozaj chcete vymazať všetky záznamy?');
+      if (confirmClear) {
+        localStorage.removeItem('babyLog');
+        localStorage.removeItem('lastReset');
+        log = [];
+        renderLog(log);
+        lastUpdateEl.textContent = 'Všetky záznamy boli vymazané.';
+      }
     });
   </script>
 </body>
