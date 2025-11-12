@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Log</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #fffaf3;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #555;
+      font-size: 2em;
+      margin-bottom: 15px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 150px);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    button {
+      border: none;
+      border-radius: 15px;
+      padding: 15px;
+      font-size: 1.1em;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.1s ease, box-shadow 0.2s;
+      color: #fff;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .feed { background: #ffadad; }
+    .diaper { background: #ffd6a5; }
+    .sleep { background: #caffbf; color: #333; }
+    .wake { background: #9bf6ff; color: #333; }
+
+    .log {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffffcc;
+      border-radius: 15px;
+      padding: 15px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .entry {
+      font-size: 1.3em;
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .entry:last-child {
+      border-bottom: none;
+    }
+
+    .time {
+      font-weight: bold;
+      color: #444;
+    }
+
+    .category {
+      font-style: italic;
+      color: #666;
+    }
+
+    .last-update {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍼 Baby Log</h1>
+
+  <div class="buttons">
+    <button class="feed">🍼 Papanie</button>
+    <button class="diaper">🧷 Prebalenie</button>
+    <button class="sleep">😴 Zaspal</button>
+    <button class="wake">🌞 Zobudil sa</button>
+  </div>
+
+  <div class="log" id="log"></div>
+  <div class="last-update" id="last-update"></div>
+
+  <script>
+    const logContainer = document.getElementById('log');
+    const lastUpdateEl = document.getElementById('last-update');
+    const buttons = document.querySelectorAll('button');
+
+    function getTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function loadLog() {
+      const saved = JSON.parse(localStorage.getItem('babyLog') || '[]');
+      const lastReset = localStorage.getItem('lastReset');
+      const now = Date.now();
+
+      // reset after 24h (except last entries)
+      if (lastReset && now - lastReset > 24 * 60 * 60 * 1000) {
+        const latest = {};
+        saved.forEach(e => { latest[e.category] = e; });
+        const keep = Object.values(latest);
+        localStorage.setItem('babyLog', JSON.stringify(keep));
+        localStorage.setItem('lastReset', now);
+        return keep;
+      }
+      return saved;
+    }
+
+    function saveLog(log) {
+      localStorage.setItem('babyLog', JSON.stringify(log));
+      localStorage.setItem('lastReset', Date.now());
+    }
+
+    function renderLog(log) {
+      logContainer.innerHTML = '';
+      log.slice().reverse().forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `<span class="category">${entry.category}</span><span class="time">${entry.time}</span>`;
+        logContainer.appendChild(div);
+      });
+      lastUpdateEl.textContent = log.length > 0 ? 
+        `Posledná aktualizácia: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}` : '';
+    }
+
+    let log = loadLog();
+    renderLog(log);
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const category = btn.textContent.trim();
+        const entry = { category, time: getTime() };
+        log.push(entry);
+        saveLog(log);
+        renderLog(log);
+      });
+    });
+  </script>
+</body>
+</html>
