@@ -28,9 +28,36 @@
 
     h1 {
       font-size: 1.8em;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-align: center;
       color: #444;
+    }
+
+    /* Nový štýl pre zobrazenie ďalšieho papania */
+    .next-feed-display {
+      background: #fff;
+      padding: 15px 25px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 10px rgba(255, 179, 179, 0.4);
+      margin-bottom: 25px;
+      text-align: center;
+      border: 2px solid #ffb3b3;
+      display: none; /* Skryté, kým nie je záznam */
+    }
+
+    .next-feed-label {
+      font-size: 0.9em;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .next-feed-time {
+      font-size: 2em;
+      font-weight: bold;
+      color: #e65c5c;
+      display: block;
+      margin-top: 5px;
     }
 
     .buttons {
@@ -59,10 +86,8 @@
       transform: scale(0.97);
     }
 
-    .feed   { background: #ffb3b3; }
+    .feed   { background: #ffb3b3; color: #333; }
     .diaper { background: #ffe08a; color: #333; }
-    .sleep  { background: #b8f1b0; color: #333; }
-    .wake   { background: #9ae6ff; color: #333; }
     .clear  { background: #ff6961; }
 
     .log {
@@ -118,11 +143,15 @@
 <body>
   <h1>👶 Baby Log</h1>
 
+  <!-- Tu sa zobrazí čas ďalšieho jedenia -->
+  <div id="nextFeedBox" class="next-feed-display">
+    <span class="next-feed-label">Ďalšie papanie o:</span>
+    <span id="nextFeedTime" class="next-feed-time">--:--</span>
+  </div>
+
   <div class="buttons">
     <button class="feed">🍼 Papanie</button>
     <button class="diaper">🧷 Prebalenie</button>
-    <button class="sleep">😴 Zaspal</button>
-    <button class="wake">🌞 Zobudil sa</button>
     <button class="clear">🗑️ Vymazať všetko</button>
   </div>
 
@@ -132,12 +161,16 @@
   <script>
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
+    
+    // Elementy pre zobrazenie ďalšieho jedenia
+    const nextFeedBox = document.getElementById('nextFeedBox');
+    const nextFeedTimeEl = document.getElementById('nextFeedTime');
+
     const buttons = document.querySelectorAll('button:not(.clear)');
     const clearButton = document.querySelector('.clear');
 
-    function getTime() {
-      const now = new Date();
-      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    function getTime(dateObj = new Date()) {
+      return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     function loadLog() {
@@ -145,7 +178,7 @@
       const lastReset = localStorage.getItem('lastReset');
       const now = Date.now();
 
-      // reset po 24h
+      // Reset po 24h
       if (lastReset && now - lastReset > 24 * 60 * 60 * 1000) {
         const latest = {};
         saved.forEach(e => { latest[e.category] = e; });
@@ -160,6 +193,15 @@
     function saveLog(log) {
       localStorage.setItem('babyLog', JSON.stringify(log));
       localStorage.setItem('lastReset', Date.now());
+    }
+
+    // Funkcia na načítanie uloženého času ďalšieho kŕmenia
+    function loadNextFeed() {
+      const savedTime = localStorage.getItem('nextFeedTime');
+      if (savedTime) {
+        nextFeedTimeEl.textContent = savedTime;
+        nextFeedBox.style.display = 'block';
+      }
     }
 
     function renderLog(log) {
@@ -178,25 +220,47 @@
 
     let log = loadLog();
     renderLog(log);
+    loadNextFeed(); // Načítaj čas ďalšieho kŕmenia pri štarte
 
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         const category = btn.textContent.trim();
-        const entry = { category, time: getTime() };
+        const now = new Date();
+        const entry = { category, time: getTime(now) };
+        
+        // Logika pre Papanie (+3 hodiny)
+        if (btn.classList.contains('feed')) {
+          // Vypočítaj čas o 3 hodiny
+          const nextFeedDate = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+          const nextFeedString = getTime(nextFeedDate);
+          
+          // Zobraz a ulož
+          nextFeedTimeEl.textContent = nextFeedString;
+          nextFeedBox.style.display = 'block';
+          localStorage.setItem('nextFeedTime', nextFeedString);
+        }
+
         log.push(entry);
         saveLog(log);
         renderLog(log);
       });
     });
 
-    // CLEAR tlačidlo s potvrdením
+    // CLEAR tlačidlo
     clearButton.addEventListener('click', () => {
       const confirmClear = confirm('Naozaj chcete vymazať všetky záznamy?');
       if (confirmClear) {
         localStorage.removeItem('babyLog');
         localStorage.removeItem('lastReset');
+        localStorage.removeItem('nextFeedTime'); // Vymaž aj čas ďalšieho jedenia
+        
         log = [];
         renderLog(log);
+        
+        // Skry box s časom
+        nextFeedBox.style.display = 'none';
+        nextFeedTimeEl.textContent = '--:--';
+        
         lastUpdateEl.textContent = 'Všetky záznamy boli vymazané.';
       }
     });
