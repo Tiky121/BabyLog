@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Log 📋 (Online)</title>
   <style>
-    /* --- CSS ŠTÝLY --- */
+    /* --- CSS ŠTÝLY (Bez zmeny) --- */
     :root {
       --bg: #fff8ee;
       --card: #ffffff;
@@ -34,7 +34,6 @@
       color: #444;
     }
 
-    /* KONTAJNER PRE STAVY (Jedenie + Vitamín) */
     .status-container {
       width: 100%;
       max-width: 400px;
@@ -43,7 +42,6 @@
       margin-bottom: 25px;
     }
 
-    /* Boxy */
     .info-box {
       flex: 1;
       background: #fff;
@@ -58,39 +56,16 @@
       align-items: center;
     }
 
-    .feed-box {
-      border-color: #ffb3b3;
-    }
-    
-    .vitamin-box {
-      border-color: #ddd;
-      background: #f9f9f9;
-    }
-    
-    .vitamin-box.done {
-      border-color: #a3e635; /* Zelená */
-      background: #f0fdf4;
-    }
+    .feed-box { border-color: #ffb3b3; }
+    .vitamin-box { border-color: #ddd; background: #f9f9f9; }
+    .vitamin-box.done { border-color: #a3e635; background: #f0fdf4; }
 
-    .info-label {
-      font-size: 0.75em;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 5px;
-    }
-
-    .info-value {
-      font-size: 1.4em;
-      font-weight: bold;
-      color: #333;
-    }
-
+    .info-label { font-size: 0.75em; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .info-value { font-size: 1.4em; font-weight: bold; color: #333; }
     .feed-time { color: #e65c5c; }
     .vitamin-status { color: #888; }
     .vitamin-box.done .vitamin-status { color: #449e48; }
 
-    /* Tlačidlá */
     .buttons {
       display: flex;
       flex-direction: column;
@@ -112,7 +87,6 @@
       box-shadow: 0 3px 6px var(--shadow);
       width: 100%;
     }
-
     .action-btn:active { transform: scale(0.97); }
 
     .feed   { background: #ffb3b3; color: #333; }
@@ -120,7 +94,6 @@
     .vitamin{ background: #fffacd; border: 2px solid #fce588; color: #333; }
     .clear  { background: #ff6961; color: #fff; }
 
-    /* LOG */
     .log {
       width: 100%;
       max-width: 400px;
@@ -143,7 +116,22 @@
     .entry:last-child { border-bottom: none; }
     .category { font-weight: 600; font-size: 1em; color: #666; }
     .entry-right { display: flex; align-items: center; gap: 10px; }
-    .time { font-weight: bold; font-size: 1.2em; color: #333; }
+    
+    .time { 
+      font-weight: bold; 
+      font-size: 1.2em; 
+      color: #333; 
+      cursor: pointer; 
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 4px;
+      text-decoration-color: #aaa;
+      transition: color 0.2s;
+    }
+    .time:hover {
+      color: #007bff;
+      text-decoration-color: #007bff;
+    }
 
     .delete-btn {
       background: transparent;
@@ -170,22 +158,15 @@
 <body>
   <h1>👶 Baby Log <span style="font-size:0.5em; vertical-align:middle; color:green;">(Online)</span></h1>
 
-  <!-- Kontajner pre stavy -->
   <div class="status-container">
-    
-    <!-- Box pre Papanie -->
     <div class="info-box feed-box" id="nextFeedBox" style="display:none;">
       <span class="info-label">Ďalšie papanie</span>
       <span id="nextFeedTime" class="info-value feed-time">--:--</span>
     </div>
-
-    <!-- Box pre Vitamín D -->
     <div class="info-box vitamin-box" id="vitaminBox">
-      <!-- Tu sa zobrazí dnešný dátum -->
       <span class="info-label">Vitamín D (<span id="dateLabel">--.--</span>)</span>
       <span id="vitaminStatus" class="info-value vitamin-status">❌ Nie</span>
     </div>
-
   </div>
 
   <div class="buttons">
@@ -203,7 +184,7 @@
   <!-- FIREBASE LOGIKA -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, set, update } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
     // Tvoje údaje
     const firebaseConfig = {
@@ -224,42 +205,30 @@
     const nextFeedRef = ref(db, 'nextFeed');
     const vitaminRef = ref(db, 'vitaminD');
 
-    // Elementy HTML
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
-    
     const nextFeedBox = document.getElementById('nextFeedBox');
     const nextFeedTimeEl = document.getElementById('nextFeedTime');
-    
     const vitaminBox = document.getElementById('vitaminBox');
     const vitaminStatusEl = document.getElementById('vitaminStatus');
-    const dateLabelEl = document.getElementById('dateLabel'); // Element pre dátum
-
+    const dateLabelEl = document.getElementById('dateLabel');
     const actionButtons = document.querySelectorAll('.action-btn:not(.clear)');
     const clearButton = document.querySelector('.clear');
 
     function getTime(dateObj = new Date()) {
       return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-
     function getTodayDateString() {
-      // Vráti napr. 29.11.2025
       return new Date().toLocaleDateString('sk-SK');
     }
 
-    // --- NASTAVENIE DÁTUMU V HLAVIČKE ---
     dateLabelEl.textContent = getTodayDateString();
 
-    // --- LOGIKA ---
-
-    // 1. Vitamín D
+    // 1. Vitamín D - Kontrola
     onValue(vitaminRef, (snapshot) => {
       const data = snapshot.val();
       const today = getTodayDateString();
-
-      // Aktualizujeme dátum v hlavičke (pre istotu aj tu, ak by bežala appka cez polnoc)
       dateLabelEl.textContent = today;
-
       if (data && data.date === today) {
         vitaminStatusEl.innerHTML = `✅ ${data.time}`;
         vitaminBox.classList.add('done');
@@ -269,7 +238,7 @@
       }
     });
 
-    // 2. Papanie
+    // 2. Ďalšie papanie - Len zobrazovanie (výpočet je nižšie)
     onValue(nextFeedRef, (snapshot) => {
       const time = snapshot.val();
       if (time) {
@@ -280,57 +249,113 @@
       }
     });
 
-    // 3. Logy
+    // 3. LOGY - Hlavná logika (Vykresľovanie + Automatický prepočet)
     onValue(logsRef, (snapshot) => {
       const data = snapshot.val();
       logContainer.innerHTML = '';
       
+      let logsArray = [];
+
       if (data) {
-        const logsArray = Object.entries(data).map(([key, value]) => {
+        logsArray = Object.entries(data).map(([key, value]) => {
           return { id: key, ...value };
         });
 
-        logsArray.forEach((entry) => {
+        // Zoradenie podľa timestamp (najnovšie prvé pre logiku, ale vykresľujeme prepend)
+        // Toto je dôležité pre nájdenie posledného papania
+        logsArray.sort((a, b) => b.timestamp - a.timestamp);
+
+        // --- AUTOMATICKÝ PREPOČET ĎALŠIEHO PAPANIA ---
+        recalculateNextFeed(logsArray);
+        // ----------------------------------------------
+
+        // Vykreslenie (cyklus ide od najnovšieho po najstaršie, ale prepend dáva najnovšie hore)
+        // Aby sme zachovali poradie na obrazovke tak ako predtým (najnovšie hore),
+        // musíme pole prejsť od konca (najstaršie) ak používame prepend, 
+        // ALEBO prejdeme od začiatku (najnovšie) a použijeme append?
+        // Najjednoduchšie: prejdeme od najstaršieho po najnovšie a prependujeme.
+        
+        // Kópia pre vykreslenie a otočenie poradia
+        [...logsArray].reverse().forEach((entry) => {
           const div = document.createElement('div');
           div.className = 'entry';
           div.innerHTML = `
             <span class="category">${entry.category}</span>
             <div class="entry-right">
-              <span class="time">${entry.time}</span>
+              <span class="time" title="Klikni pre zmenu času" data-id="${entry.id}" data-time="${entry.time}">${entry.time}</span>
               <button class="delete-btn" data-id="${entry.id}">✕</button>
             </div>
           `;
           logContainer.prepend(div);
         });
 
+        // Event Listenery
         document.querySelectorAll('.delete-btn').forEach(btn => {
           btn.addEventListener('click', function() {
             deleteEntry(this.getAttribute('data-id'));
           });
         });
 
+        document.querySelectorAll('.time').forEach(span => {
+          span.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const oldTime = this.getAttribute('data-time');
+            editEntryTime(id, oldTime);
+          });
+        });
+
       } else {
+        // Ak nie sú žiadne logy, vymaž aj čas papania
+        set(nextFeedRef, null);
         logContainer.innerHTML = '<div class="loading">Žiadne záznamy</div>';
       }
+      
       lastUpdateEl.textContent = `Aktualizované: ${getTime()}`;
     });
 
-    // 4. Kliknutia
+    // --- FUNKCIA NA VÝPOČET ĎALŠIEHO PAPANIA ---
+    function recalculateNextFeed(allLogs) {
+      // 1. Nájdi všetky záznamy s textom "Papanie"
+      // Filtrujeme podľa názvu kategórie (obsahuje "Papanie")
+      const feedings = allLogs.filter(log => log.category && log.category.includes('Papanie'));
+      
+      if (feedings.length > 0) {
+        // allLogs sú už zoradené od najnovšieho, takže prvý je posledné papanie
+        const lastFeed = feedings[0];
+        
+        // Rozoberieme čas "HH:MM"
+        const [hours, minutes] = lastFeed.time.split(':').map(Number);
+        
+        // Vytvoríme dátum (použijeme dnešný dátum + čas z logu)
+        // Toto je zjednodušenie, ale pre tento účel stačí.
+        const feedDate = new Date();
+        feedDate.setHours(hours, minutes, 0, 0);
+        
+        // Pridáme 2.15 hodiny (2h 9m = 2.15 * 60 * 60 * 1000 ms)
+        const nextFeedDate = new Date(feedDate.getTime() + 2.25 * 60 * 60 * 1000);
+        
+        const nextFeedString = getTime(nextFeedDate);
+        
+        // Zapíšeme do Firebase (len ak je iný, ale set to zvládne efektívne)
+        set(nextFeedRef, nextFeedString);
+      } else {
+        // Ak sme vymazali všetky papania
+        set(nextFeedRef, null);
+      }
+    }
+
+    // --- BUTTON CLICK ---
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const now = new Date();
         const timeNow = getTime(now);
         let category = btn.textContent.trim();
         
-        if (btn.classList.contains('feed')) {
-          const nextFeedDate = new Date(now.getTime() + 2.15 * 60 * 60 * 1000);
-          set(nextFeedRef, getTime(nextFeedDate));
-        } 
-        else if (btn.classList.contains('vitamin')) {
-          set(vitaminRef, {
-            date: getTodayDateString(),
-            time: timeNow
-          });
+        // POZOR: Tu už nenastavujeme nextFeedRef ručne!
+        // Len pridáme log a funkcia recalculateNextFeed to spraví automaticky.
+        
+        if (btn.classList.contains('vitamin')) {
+          set(vitaminRef, { date: getTodayDateString(), time: timeNow });
         }
 
         const entry = { category, time: timeNow, timestamp: Date.now() };
@@ -341,6 +366,18 @@
     function deleteEntry(id) {
       if (confirm('Naozaj vymazať tento záznam?')) {
         remove(ref(db, `logs/${id}`));
+      }
+    }
+
+    function editEntryTime(id, oldTime) {
+      const newTime = prompt("Zadaj nový čas (napr. 13:30):", oldTime);
+      if (newTime && newTime !== oldTime) {
+        // Aktualizujeme čas v logu -> to spustí onValue -> to spustí recalculateNextFeed
+        update(ref(db, `logs/${id}`), {
+          time: newTime
+        }).catch((error) => {
+          alert("Chyba: " + error.message);
+        });
       }
     }
 
