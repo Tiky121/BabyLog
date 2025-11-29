@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baby Log 📋</title>
+  <title>Baby Log 📋 (Online)</title>
   <style>
+    /* --- CSS ŠTÝLY --- */
     :root {
       --bg: #fff8ee;
       --card: #ffffff;
@@ -68,7 +69,6 @@
       margin-bottom: 20px;
     }
 
-    /* Hlavné tlačidlá */
     .action-btn {
       border: none;
       border-radius: var(--radius);
@@ -109,55 +109,25 @@
       border-bottom: 1px solid #eee;
       font-size: 1.1em;
     }
+    .entry:last-child { border-bottom: none; }
+    .category { font-weight: 600; font-size: 1em; color: #666; }
+    .entry-right { display: flex; align-items: center; gap: 10px; }
+    .time { font-weight: bold; font-size: 1.2em; color: #333; }
 
-    .entry:last-child {
-      border-bottom: none;
-    }
-
-    .category {
-      font-weight: 600;
-      font-size: 1em;
-      color: #666;
-    }
-
-    /* Obal pre čas a mazacie tlačidlo, aby boli vpravo spolu */
-    .entry-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .time {
-      font-weight: bold;
-      font-size: 1.2em;
-      color: #333;
-    }
-
-    /* Štýl pre mazacie tlačidlo (červené X) */
     .delete-btn {
       background: transparent;
       border: none;
-      color: #ff4d4d; /* Červená */
+      color: #ff4d4d;
       font-weight: bold;
       font-size: 1.2em;
       cursor: pointer;
       padding: 5px 10px;
       border-radius: 8px;
-      line-height: 1;
-      width: auto; /* Prepíše width: 100% z globálneho buttonu ak by bol kolízny */
-      box-shadow: none;
     }
+    .delete-btn:hover { background: #fff0f0; }
 
-    .delete-btn:hover {
-      background: #fff0f0;
-    }
-
-    .last-update {
-      font-size: 0.9em;
-      color: #888;
-      margin-top: 10px;
-      text-align: center;
-    }
+    .last-update { font-size: 0.9em; color: #888; margin-top: 10px; text-align: center; }
+    .loading { text-align: center; color: #888; font-style: italic; }
 
     @media (min-width: 480px) {
       h1 { font-size: 2em; }
@@ -167,9 +137,8 @@
   </style>
 </head>
 <body>
-  <h1>👶 Baby Log</h1>
+  <h1>👶 Baby Log <span style="font-size:0.5em; vertical-align:middle; color:green;">(Online)</span></h1>
 
-  <!-- Tu sa zobrazí čas ďalšieho jedenia -->
   <div id="nextFeedBox" class="next-feed-display">
     <span class="next-feed-label">Ďalšie papanie o:</span>
     <span id="nextFeedTime" class="next-feed-time">--:--</span>
@@ -181,17 +150,42 @@
     <button class="action-btn clear">🗑️ Vymazať všetko</button>
   </div>
 
-  <div class="log" id="log"></div>
+  <div class="log" id="log">
+    <div class="loading">Pripájam sa k databáze...</div>
+  </div>
   <div class="last-update" id="last-update"></div>
 
-  <script>
+  <!-- FIREBASE LOGIKA -->
+  <script type="module">
+    // 1. Importujeme Firebase App a Database (verzia 12.6.0)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    // 2. Tvoja konfigurácia (vložil som údaje, ktoré si poslal)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPrjv-kUhKMCWzKs2cXeYd1MkGQ1A8daQ",
+      authDomain: "baby-log-77a64.firebaseapp.com",
+      databaseURL: "https://baby-log-77a64-default-rtdb.firebaseio.com",
+      projectId: "baby-log-77a64",
+      storageBucket: "baby-log-77a64.firebasestorage.app",
+      messagingSenderId: "1039021893386",
+      appId: "1:1039021893386:web:9c4c765f5cf1f91ec83cf3",
+      measurementId: "G-FFPDQPKFGV"
+    };
+
+    // 3. Inicializácia
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app); // Spojenie s databázou
+
+    // 4. Odkazy na dáta
+    const logsRef = ref(db, 'logs'); 
+    const nextFeedRef = ref(db, 'nextFeed');
+
+    // Elementy HTML
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
-    
-    // Elementy pre zobrazenie ďalšieho jedenia
     const nextFeedBox = document.getElementById('nextFeedBox');
     const nextFeedTimeEl = document.getElementById('nextFeedTime');
-
     const actionButtons = document.querySelectorAll('.action-btn:not(.clear)');
     const clearButton = document.querySelector('.clear');
 
@@ -199,114 +193,91 @@
       return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function loadLog() {
-      const saved = JSON.parse(localStorage.getItem('babyLog') || '[]');
-      const lastReset = localStorage.getItem('lastReset');
-      const now = Date.now();
+    // --- LOGIKA APLIKÁCIE ---
 
-      // Reset po 24h
-      if (lastReset && now - lastReset > 24 * 60 * 60 * 1000) {
-        const latest = {};
-        saved.forEach(e => { latest[e.category] = e; });
-        const keep = Object.values(latest);
-        localStorage.setItem('babyLog', JSON.stringify(keep));
-        localStorage.setItem('lastReset', now);
-        return keep;
-      }
-      return saved;
-    }
-
-    function saveLog(log) {
-      localStorage.setItem('babyLog', JSON.stringify(log));
-      localStorage.setItem('lastReset', Date.now());
-    }
-
-    function loadNextFeed() {
-      const savedTime = localStorage.getItem('nextFeedTime');
-      if (savedTime) {
-        nextFeedTimeEl.textContent = savedTime;
-        nextFeedBox.style.display = 'block';
-      }
-    }
-
-    // Funkcia na vymazanie jedného konkrétneho záznamu
-    function deleteEntry(index) {
-      const confirmDelete = confirm('Naozaj vymazať tento záznam?');
-      if (confirmDelete) {
-        log.splice(index, 1); // Odstráni prvok na danom indexe
-        saveLog(log);
-        renderLog(log);
-      }
-    }
-
-    function renderLog(logData) {
-      logContainer.innerHTML = '';
+    // A) Počúvanie zmien v zozname (synchronizácia)
+    onValue(logsRef, (snapshot) => {
+      const data = snapshot.val();
+      logContainer.innerHTML = ''; // Vyčistiť
       
-      // Prechádzame pole klasicky, ale do HTML vkladáme cez prepend(),
-      // aby najnovšie záznamy (posledné v poli) boli na vrchu stránky.
-      logData.forEach((entry, index) => {
-        const div = document.createElement('div');
-        div.className = 'entry';
-        
-        div.innerHTML = `
-          <span class="category">${entry.category}</span>
-          <div class="entry-right">
-            <span class="time">${entry.time}</span>
-            <button class="delete-btn" onclick="deleteEntry(${index})">✕</button>
-          </div>
-        `;
-        
-        // prepend zabezpečí, že najnovší pridaný prvok (vyšší index) bude hore
-        logContainer.prepend(div);
-      });
+      if (data) {
+        // Prevedieme objekt na pole
+        const logsArray = Object.entries(data).map(([key, value]) => {
+          return { id: key, ...value };
+        });
 
-      lastUpdateEl.textContent = logData.length
-        ? `Posledná aktualizácia: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-        : '';
-    }
+        // Vykreslenie (najnovšie hore)
+        logsArray.forEach((entry) => {
+          const div = document.createElement('div');
+          div.className = 'entry';
+          div.innerHTML = `
+            <span class="category">${entry.category}</span>
+            <div class="entry-right">
+              <span class="time">${entry.time}</span>
+              <button class="delete-btn" data-id="${entry.id}">✕</button>
+            </div>
+          `;
+          logContainer.prepend(div);
+        });
 
-    let log = loadLog();
-    renderLog(log);
-    loadNextFeed();
+        // Pridanie funkcie na vymazanie pre každé tlačidlo
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            deleteEntry(id);
+          });
+        });
 
+      } else {
+        logContainer.innerHTML = '<div class="loading">Žiadne záznamy</div>';
+      }
+      lastUpdateEl.textContent = `Posledná synchronizácia: ${getTime()}`;
+    });
+
+    // B) Počúvanie času ďalšieho kŕmenia
+    onValue(nextFeedRef, (snapshot) => {
+      const time = snapshot.val();
+      if (time) {
+        nextFeedTimeEl.textContent = time;
+        nextFeedBox.style.display = 'block';
+      } else {
+        nextFeedBox.style.display = 'none';
+      }
+    });
+
+    // C) Pridanie nového záznamu
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const category = btn.textContent.trim();
         const now = new Date();
-        const entry = { category, time: getTime(now) };
-        
+        const entry = { category, time: getTime(now), timestamp: Date.now() };
+
         if (btn.classList.contains('feed')) {
-          // Pôvodná logika: 2.15 hodiny (cca 2h 9m)
+          // Výpočet + 2.15h (cca 2h 9m)
           const nextFeedDate = new Date(now.getTime() + 2.15 * 60 * 60 * 1000);
           const nextFeedString = getTime(nextFeedDate);
-          
-          nextFeedTimeEl.textContent = nextFeedString;
-          nextFeedBox.style.display = 'block';
-          localStorage.setItem('nextFeedTime', nextFeedString);
+          set(nextFeedRef, nextFeedString); // Uložiť na server
         }
 
-        log.push(entry);
-        saveLog(log);
-        renderLog(log);
+        push(logsRef, entry); // Odoslať log na server
       });
     });
 
+    // D) Vymazanie jedného záznamu
+    function deleteEntry(id) {
+      if (confirm('Naozaj vymazať tento záznam?')) {
+        remove(ref(db, `logs/${id}`));
+      }
+    }
+
+    // E) Vymazanie všetkého
     clearButton.addEventListener('click', () => {
-      const confirmClear = confirm('Naozaj chcete vymazať všetky záznamy?');
-      if (confirmClear) {
-        localStorage.removeItem('babyLog');
-        localStorage.removeItem('lastReset');
-        localStorage.removeItem('nextFeedTime');
-        
-        log = [];
-        renderLog(log);
-        
-        nextFeedBox.style.display = 'none';
-        nextFeedTimeEl.textContent = '--:--';
-        
-        lastUpdateEl.textContent = 'Všetky záznamy boli vymazané.';
+      if (confirm('Naozaj chcete vymazať VŠETKY záznamy zo servera?')) {
+        remove(logsRef);
+        remove(nextFeedRef);
       }
     });
+
   </script>
 </body>
 </html>
