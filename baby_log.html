@@ -34,32 +34,63 @@
       color: #444;
     }
 
-    .next-feed-display {
-      background: #fff;
-      padding: 15px 25px;
-      border-radius: var(--radius);
-      box-shadow: 0 4px 10px rgba(255, 179, 179, 0.4);
+    /* KONTAJNER PRE STAVY (Jedenie + Vitamín) */
+    .status-container {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      gap: 10px;
       margin-bottom: 25px;
-      text-align: center;
-      border: 2px solid #ffb3b3;
-      display: none;
     }
 
-    .next-feed-label {
-      font-size: 0.9em;
+    /* Box pre ďalšie jedenie */
+    .info-box {
+      flex: 1;
+      background: #fff;
+      padding: 10px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      text-align: center;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .feed-box {
+      border-color: #ffb3b3;
+    }
+    
+    .vitamin-box {
+      border-color: #ddd;
+      background: #f9f9f9;
+    }
+    
+    .vitamin-box.done {
+      border-color: #a3e635; /* Zelená */
+      background: #f0fdf4;
+    }
+
+    .info-label {
+      font-size: 0.75em;
       color: #666;
       text-transform: uppercase;
       letter-spacing: 1px;
+      margin-bottom: 5px;
     }
 
-    .next-feed-time {
-      font-size: 2em;
+    .info-value {
+      font-size: 1.4em;
       font-weight: bold;
-      color: #e65c5c;
-      display: block;
-      margin-top: 5px;
+      color: #333;
     }
 
+    .feed-time { color: #e65c5c; }
+    .vitamin-status { color: #888; }
+    .vitamin-box.done .vitamin-status { color: #449e48; }
+
+    /* Tlačidlá */
     .buttons {
       display: flex;
       flex-direction: column;
@@ -75,21 +106,21 @@
       padding: 18px;
       font-size: 1.2em;
       font-weight: 600;
-      color: #fff;
+      color: #333; /* Zmenené na tmavú pre lepšiu čitateľnosť na svetlých farbách */
       cursor: pointer;
       transition: transform 0.1s ease, box-shadow 0.2s ease;
       box-shadow: 0 3px 6px var(--shadow);
       width: 100%;
     }
 
-    .action-btn:active {
-      transform: scale(0.97);
-    }
+    .action-btn:active { transform: scale(0.97); }
 
     .feed   { background: #ffb3b3; color: #333; }
     .diaper { background: #ffe08a; color: #333; }
-    .clear  { background: #ff6961; }
+    .vitamin{ background: #fffacd; border: 2px solid #fce588; color: #333; } /* Žltá */
+    .clear  { background: #ff6961; color: #fff; }
 
+    /* LOG */
     .log {
       width: 100%;
       max-width: 400px;
@@ -139,14 +170,27 @@
 <body>
   <h1>👶 Baby Log <span style="font-size:0.5em; vertical-align:middle; color:green;">(Online)</span></h1>
 
-  <div id="nextFeedBox" class="next-feed-display">
-    <span class="next-feed-label">Ďalšie papanie o:</span>
-    <span id="nextFeedTime" class="next-feed-time">--:--</span>
+  <!-- Kontajner pre stavy -->
+  <div class="status-container">
+    
+    <!-- Box pre Papanie -->
+    <div class="info-box feed-box" id="nextFeedBox" style="display:none;">
+      <span class="info-label">Ďalšie papanie</span>
+      <span id="nextFeedTime" class="info-value feed-time">--:--</span>
+    </div>
+
+    <!-- Box pre Vitamín D -->
+    <div class="info-box vitamin-box" id="vitaminBox">
+      <span class="info-label">Vitamín D (Dnes)</span>
+      <span id="vitaminStatus" class="info-value vitamin-status">❌ Nie</span>
+    </div>
+
   </div>
 
   <div class="buttons">
     <button class="action-btn feed">🍼 Papanie</button>
     <button class="action-btn diaper">🧷 Prebalenie</button>
+    <button class="action-btn vitamin">☀️ Vitamín D</button>
     <button class="action-btn clear">🗑️ Vymazať všetko</button>
   </div>
 
@@ -157,11 +201,10 @@
 
   <!-- FIREBASE LOGIKA -->
   <script type="module">
-    // 1. Importujeme Firebase App a Database (verzia 12.6.0)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-    // 2. Tvoja konfigurácia (vložil som údaje, ktoré si poslal)
+    // Konfigurácia
     const firebaseConfig = {
       apiKey: "AIzaSyAPrjv-kUhKMCWzKs2cXeYd1MkGQ1A8daQ",
       authDomain: "baby-log-77a64.firebaseapp.com",
@@ -173,19 +216,26 @@
       measurementId: "G-FFPDQPKFGV"
     };
 
-    // 3. Inicializácia
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app); // Spojenie s databázou
+    const db = getDatabase(app);
 
-    // 4. Odkazy na dáta
+    // Odkazy na dáta
     const logsRef = ref(db, 'logs'); 
     const nextFeedRef = ref(db, 'nextFeed');
+    const vitaminRef = ref(db, 'vitaminD'); // Nový záznam v DB pre stav vitamínu
 
     // Elementy HTML
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
+    
+    // Papanie
     const nextFeedBox = document.getElementById('nextFeedBox');
     const nextFeedTimeEl = document.getElementById('nextFeedTime');
+    
+    // Vitamín
+    const vitaminBox = document.getElementById('vitaminBox');
+    const vitaminStatusEl = document.getElementById('vitaminStatus');
+
     const actionButtons = document.querySelectorAll('.action-btn:not(.clear)');
     const clearButton = document.querySelector('.clear');
 
@@ -193,25 +243,59 @@
       return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // --- LOGIKA APLIKÁCIE ---
+    function getTodayDateString() {
+      // Vráti dátum vo formáte DD.MM.YYYY pre porovnanie
+      return new Date().toLocaleDateString('sk-SK');
+    }
 
-    // A) Počúvanie zmien v zozname (synchronizácia)
+    // --- LOGIKA ---
+
+    // 1. Vitamín D - Kontrola stavu
+    onValue(vitaminRef, (snapshot) => {
+      const data = snapshot.val(); // Očakávame { date: "29.11.2025", time: "14:00" }
+      const today = getTodayDateString();
+
+      // Ak máme záznam a dátum sa zhoduje s dneškom
+      if (data && data.date === today) {
+        vitaminStatusEl.innerHTML = `✅ ${data.time}`;
+        vitaminBox.classList.add('done');
+      } else {
+        // Ak nie je záznam alebo je zo včera
+        vitaminStatusEl.innerHTML = `❌ Nie`;
+        vitaminBox.classList.remove('done');
+      }
+    });
+
+    // 2. Papanie - Kontrola
+    onValue(nextFeedRef, (snapshot) => {
+      const time = snapshot.val();
+      if (time) {
+        nextFeedTimeEl.textContent = time;
+        nextFeedBox.style.display = 'flex';
+      } else {
+        nextFeedBox.style.display = 'none';
+      }
+    });
+
+    // 3. Zoznam logov
     onValue(logsRef, (snapshot) => {
       const data = snapshot.val();
-      logContainer.innerHTML = ''; // Vyčistiť
+      logContainer.innerHTML = '';
       
       if (data) {
-        // Prevedieme objekt na pole
         const logsArray = Object.entries(data).map(([key, value]) => {
           return { id: key, ...value };
         });
 
-        // Vykreslenie (najnovšie hore)
         logsArray.forEach((entry) => {
           const div = document.createElement('div');
           div.className = 'entry';
+          
+          // Ak je to vitamin, pridame malu ikonku slnka do nazvu
+          let categoryDisplay = entry.category;
+          
           div.innerHTML = `
-            <span class="category">${entry.category}</span>
+            <span class="category">${categoryDisplay}</span>
             <div class="entry-right">
               <span class="time">${entry.time}</span>
               <button class="delete-btn" data-id="${entry.id}">✕</button>
@@ -220,61 +304,55 @@
           logContainer.prepend(div);
         });
 
-        // Pridanie funkcie na vymazanie pre každé tlačidlo
         document.querySelectorAll('.delete-btn').forEach(btn => {
           btn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            deleteEntry(id);
+            deleteEntry(this.getAttribute('data-id'));
           });
         });
 
       } else {
         logContainer.innerHTML = '<div class="loading">Žiadne záznamy</div>';
       }
-      lastUpdateEl.textContent = `Posledná synchronizácia: ${getTime()}`;
+      lastUpdateEl.textContent = `Aktualizované: ${getTime()}`;
     });
 
-    // B) Počúvanie času ďalšieho kŕmenia
-    onValue(nextFeedRef, (snapshot) => {
-      const time = snapshot.val();
-      if (time) {
-        nextFeedTimeEl.textContent = time;
-        nextFeedBox.style.display = 'block';
-      } else {
-        nextFeedBox.style.display = 'none';
-      }
-    });
-
-    // C) Pridanie nového záznamu
+    // 4. Pridanie záznamu
     actionButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        const category = btn.textContent.trim();
         const now = new Date();
-        const entry = { category, time: getTime(now), timestamp: Date.now() };
-
+        const timeNow = getTime(now);
+        let category = btn.textContent.trim();
+        
+        // Logika podľa typu tlačidla
         if (btn.classList.contains('feed')) {
-          // Výpočet + 2.15h (cca 2h 9m)
           const nextFeedDate = new Date(now.getTime() + 2.15 * 60 * 60 * 1000);
-          const nextFeedString = getTime(nextFeedDate);
-          set(nextFeedRef, nextFeedString); // Uložiť na server
+          set(nextFeedRef, getTime(nextFeedDate));
+        } 
+        else if (btn.classList.contains('vitamin')) {
+          // Uloženie stavu "Vitamín podaný dnes"
+          set(vitaminRef, {
+            date: getTodayDateString(),
+            time: timeNow
+          });
         }
 
-        push(logsRef, entry); // Odoslať log na server
+        // Pridanie do hlavného logu
+        const entry = { category, time: timeNow, timestamp: Date.now() };
+        push(logsRef, entry);
       });
     });
 
-    // D) Vymazanie jedného záznamu
     function deleteEntry(id) {
       if (confirm('Naozaj vymazať tento záznam?')) {
         remove(ref(db, `logs/${id}`));
       }
     }
 
-    // E) Vymazanie všetkého
     clearButton.addEventListener('click', () => {
-      if (confirm('Naozaj chcete vymazať VŠETKY záznamy zo servera?')) {
+      if (confirm('Vymazať VŠETKY záznamy (históriu aj stavy)?')) {
         remove(logsRef);
         remove(nextFeedRef);
+        remove(vitaminRef);
       }
     });
 
