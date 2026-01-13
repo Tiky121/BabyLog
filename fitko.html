@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trening PRO | 70min</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #2196F3; /* Modrá pre PRO look */
+            --accent-check: #4caf50;
+            --border-radius: 12px;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            margin: 0 0 5px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 5px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .workout-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 0;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .day-header {
+            background: linear-gradient(90deg, #1e1e1e 0%, #252525 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-title {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .duration {
+            font-size: 12px;
+            background: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        .exercise-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .exercise-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .exercise-item:active {
+            background-color: #252525;
+        }
+
+        .exercise-item:last-child {
+            border-bottom: none;
+        }
+
+        .exercise-info {
+            flex-grow: 1;
+        }
+
+        .exercise-name {
+            font-size: 16px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .exercise-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .tag {
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Checkbox styling */
+        .checkbox {
+            width: 26px;
+            height: 26px;
+            border: 2px solid #444;
+            border-radius: 50%; /* Okrúhle pre modernejší look */
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            flex-shrink: 0;
+        }
+
+        /* Active State */
+        .exercise-item.completed .checkbox {
+            background-color: var(--accent-check);
+            border-color: var(--accent-check);
+            transform: scale(1.1);
+        }
+
+        .exercise-item.completed .checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+        }
+
+        .exercise-item.completed .exercise-name {
+            text-decoration: line-through;
+            color: #555;
+        }
+        
+        .exercise-item.completed .exercise-meta {
+            color: #444;
+        }
+
+        /* Reset Button */
+        .reset-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+
+        .reset-btn {
+            background-color: #333;
+            color: var(--text-muted);
+            border: 1px solid #444;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn:hover {
+            background-color: #444;
+            color: white;
+        }
+        
+        .warmup {
+            border-left: 3px solid #ff9800;
+        }
+        .main-lift {
+            border-left: 3px solid var(--accent);
+        }
+        .accessory {
+            border-left: 3px solid #9c27b0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Môj Plán: Volume</h1>
+        <p>Full Body 3x týždenne • 65-75 min</p>
+    </div>
+
+    <!-- TRENING A -->
+    <div class="section-label">PONDELOK / UTOROK</div>
+    <div class="workout-card">
+        <div class="day-header">
+            <h2 class="day-title">Tréning A (Sila + Push)</h2>
+            <span class="duration">~70 min</span>
+        </div>
+        <ul class="exercise-list">
+            <!-- Warmup -->
+            <li class="exercise-item warmup" onclick="toggleExercise(this, 'a-warmup')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Rozcvička (Kĺby + 5 min pás)</span>
+                    <span class="exercise-meta"><span class="tag">Zahriatie</span> <span class="tag">10 min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <!-- Main Lifts -->
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'a-sq')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Drepy (Činka/Goblet)</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">6-8 op.</span> <span class="tag">Pauza 3min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'a-bp')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Bench Press</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">8-10 op.</span> <span class="tag">Pauza 2min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'a-row')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Príťahy v predklone</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">10-12 op.</span> <span class="tag">Pauza 2min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <!-- Accessories -->
+            <li class="exercise-item accessory" onclick="toggleExercise(this, 'a-acc1')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Upažovanie (Bočné ramená)</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">15 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item accessory" onclick="toggleExercise(this, 'a-acc2')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Tricepsové sťahovanie kladky</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">12-15 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+             <li class="exercise-item accessory" onclick="toggleExercise(this, 'a-core')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Plank</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">do zlyhania</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- TRENING B -->
+    <div class="section-label">STREDA / ŠTVRTOK</div>
+    <div class="workout-card">
+        <div class="day-header">
+            <h2 class="day-title">Tréning B (Zadný reťazec)</h2>
+            <span class="duration">~70 min</span>
+        </div>
+        <ul class="exercise-list">
+             <li class="exercise-item warmup" onclick="toggleExercise(this, 'b-warmup')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Rozcvička (Dynamický strečing)</span>
+                    <span class="exercise-meta"><span class="tag">Zahriatie</span> <span class="tag">10 min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'b-rdl')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Rumunský mŕtvy ťah (RDL)</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">8-10 op.</span> <span class="tag">Pauza 3min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'b-ohp')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Military Press (Tlak nad hlavu)</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">8-10 op.</span> <span class="tag">Pauza 2min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'b-lat')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Zhyby alebo Kladka (Na široko)</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">8-12 op.</span> <span class="tag">Pauza 2min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+             <li class="exercise-item accessory" onclick="toggleExercise(this, 'b-acc1')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Bicepsový zdvih (Veľká činka/EZ)</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">10-12 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item accessory" onclick="toggleExercise(this, 'b-acc2')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Face Pulls (Zadné ramená)</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">15-20 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+             <li class="exercise-item accessory" onclick="toggleExercise(this, 'b-core')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Zdvíhanie nôh vo vise</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">10-15 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- TRENING C -->
+    <div class="section-label">PIATOK / VÍKEND</div>
+    <div class="workout-card">
+        <div class="day-header">
+            <h2 class="day-title">Tréning C (Estetika & Kondícia)</h2>
+            <span class="duration">~65 min</span>
+        </div>
+        <ul class="exercise-list">
+             <li class="exercise-item warmup" onclick="toggleExercise(this, 'c-warmup')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Rozcvička (Veslo/Bicykel)</span>
+                    <span class="exercise-meta"><span class="tag">Zahriatie</span> <span class="tag">10 min</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'c-lung')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Výpady (Chôdza/Vzade)</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">12 na nohu</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'c-dips')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Kľuky na bradlách (Dips)</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">max op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item main-lift" onclick="toggleExercise(this, 'c-mach')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Veslovanie v sede na stroji</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">12-15 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item accessory" onclick="toggleExercise(this, 'c-acc1')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Peck-Deck / Rozpažovanie</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">15 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+             <li class="exercise-item accessory" onclick="toggleExercise(this, 'c-acc2')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Kladivové zdvihy (Biceps)</span>
+                    <span class="exercise-meta"><span class="tag">3 série</span> <span class="tag">12 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+            <li class="exercise-item accessory" onclick="toggleExercise(this, 'c-legs')">
+                <div class="exercise-info">
+                    <span class="exercise-name">Výpony na lýtka</span>
+                    <span class="exercise-meta"><span class="tag">4 série</span> <span class="tag">15-20 op.</span></span>
+                </div>
+                <div class="checkbox"></div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="reset-wrapper">
+        <button class="reset-btn" onclick="resetWeek()">Resetovať týždeň</button>
+    </div>
+
+    <script>
+        // Inicializácia
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = JSON.parse(localStorage.getItem('workoutProgressV2')) || {}; // V2 pre novu verziu
+            for (const [id, isCompleted] of Object.entries(savedData)) {
+                if (isCompleted) {
+                    const element = document.querySelector(`li[onclick*="'${id}'"]`);
+                    if (element) element.classList.add('completed');
+                }
+            }
+        });
+
+        function toggleExercise(element, id) {
+            element.classList.toggle('completed');
+            const savedData = JSON.parse(localStorage.getItem('workoutProgressV2')) || {};
+            savedData[id] = element.classList.contains('completed');
+            localStorage.setItem('workoutProgressV2', JSON.stringify(savedData));
+            
+            if (navigator.vibrate) navigator.vibrate(40);
+        }
+
+        function resetWeek() {
+            if(confirm("Začať nový týždeň? Všetko sa vymaže.")) {
+                localStorage.removeItem('workoutProgressV2');
+                document.querySelectorAll('.exercise-item').forEach(item => {
+                    item.classList.remove('completed');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
