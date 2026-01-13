@@ -2,226 +2,461 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Môj Syn - Sledovanie veku</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baby Dashboard | Profesionálny prehľad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Definícia farieb podľa požiadavky */
-            --teal-dark: #005f6b;   /* Tmavá petrolejová */
-            --teal-light: #e0f2f1;  /* Svetlá petrolejová (pozadie) */
-            --brick: #c54c4c;       /* Tehlová */
-            --brick-dark: #a03030;  /* Tmavšia tehlová */
-            --white: #ffffff;
-            --text-grey: #333333;
+            /* PALETA FARIEB - Profesionálna Teal & Brick */
+            --teal-primary: #005F6B;
+            --teal-secondary: #008C9E;
+            --teal-bg: #E6F4F6;
+            --brick-primary: #C54C4C;
+            --brick-accent: #E87A7A;
+            --dark-text: #1A2B33;
+            --grey-text: #5D727C;
+            --white: #FFFFFF;
+            --card-shadow: 0 10px 30px rgba(0, 95, 107, 0.08);
+            --border-radius: 24px;
         }
+
+        * { box-sizing: border-box; outline: none; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--teal-light);
-            color: var(--text-grey);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--teal-bg);
+            color: var(--dark-text);
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
+            padding-bottom: 40px;
         }
 
-        .container {
+        .app-container {
             width: 100%;
-            max-width: 600px;
-            background-color: var(--white);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin: 20px;
-            border-radius: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: transparent;
+        }
+
+        /* --- HEADER SECTION --- */
+        header {
+            background: var(--teal-primary);
+            color: var(--white);
+            padding: 40px 30px 60px 30px;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,95,107,0.3);
             overflow: hidden;
         }
 
-        header {
-            background-color: var(--teal-dark);
-            color: var(--white);
-            padding: 30px 20px;
-            text-align: center;
+        /* Dekoratívne kruhy v pozadí */
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         h1 {
-            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
             font-size: 1.8rem;
-            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.5px;
         }
 
-        .subtitle {
-            margin-top: 5px;
+        .birth-info {
             font-size: 0.9rem;
-            opacity: 0.9;
+            opacity: 0.8;
+            margin-top: 5px;
         }
 
-        .main-counter {
+        .zodiac-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- HLAVNÁ KARTA S VEKOM --- */
+        .hero-card {
+            background: var(--white);
+            margin: -40px 20px 0 20px;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            position: relative;
             text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(to bottom, var(--white), var(--teal-light));
         }
 
-        .weeks-display {
-            font-size: 4rem;
-            font-weight: bold;
-            color: var(--brick);
+        .weeks-big {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--brick-primary);
             line-height: 1;
         }
 
-        .label {
-            font-size: 1.2rem;
-            color: var(--teal-dark);
+        .weeks-label {
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: var(--grey-text);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .detailed-age {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
             margin-top: 10px;
         }
 
-        .detailed-stats {
-            text-align: center;
-            padding: 0 20px 20px;
-            font-size: 0.95rem;
-            color: #666;
+        .age-box strong {
+            display: block;
+            font-size: 1.2rem;
+            color: var(--teal-primary);
         }
 
-        .milestones-section {
+        .age-box span {
+            font-size: 0.75rem;
+            color: var(--grey-text);
+        }
+
+        /* --- DASHBOARD GRID --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
             padding: 20px;
         }
 
-        h2 {
-            color: var(--teal-dark);
-            border-bottom: 2px solid var(--brick);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        .milestone-list {
-            list-style: none;
-            padding: 0;
+        .card.full-width {
+            grid-column: span 2;
         }
 
-        .milestone-item {
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--grey-text);
+            font-weight: 700;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            transition: background 0.3s;
+            gap: 8px;
         }
 
-        .milestone-item:last-child {
-            border-bottom: none;
+        .card-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark-text);
         }
 
-        .milestone-date {
-            font-weight: bold;
-            color: var(--teal-dark);
-            width: 100px;
+        .highlight-brick { color: var(--brick-primary); }
+        .highlight-teal { color: var(--teal-primary); }
+
+        .progress-bar-bg {
+            background: #eee;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--teal-secondary), var(--teal-primary));
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        /* --- TIMELINE SECTION --- */
+        .timeline-section {
+            padding: 10px 20px;
+        }
+
+        .section-header {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.4rem;
+            color: var(--teal-primary);
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 5px solid var(--brick-primary);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ddd;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+
+        .timeline-item:active {
+            transform: scale(0.98);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -30px;
+            top: 25px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 3px solid #ccc;
+            z-index: 2;
+        }
+
+        .timeline-item.completed .timeline-dot {
+            background: var(--teal-primary);
+            border-color: var(--teal-primary);
+        }
+
+        .timeline-item.upcoming .timeline-dot {
+            background: var(--white);
+            border-color: var(--brick-primary);
+            box-shadow: 0 0 0 4px rgba(197, 76, 76, 0.2);
+        }
+
+        .t-date {
+            font-size: 0.75rem;
+            color: var(--grey-text);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .t-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--dark-text);
+        }
+
+        .t-desc {
             font-size: 0.9rem;
-            flex-shrink: 0;
+            color: #666;
+            line-height: 1.5;
         }
 
-        .milestone-desc {
-            flex-grow: 1;
+        .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-weight: 600;
         }
 
-        /* Štýl pre dosiahnuté míľniky */
-        .completed {
-            background-color: rgba(0, 95, 107, 0.1); /* Jemná petrolejová */
-            border-left: 5px solid var(--teal-dark);
-        }
+        .tag.motor { background: #e0f7fa; color: #006064; }
+        .tag.health { background: #ffebee; color: #c62828; }
+        .tag.social { background: #fff3e0; color: #e65100; }
 
-        .completed .milestone-desc {
-            text-decoration: line-through;
-            color: #888;
-        }
-
-        .completed::after {
-            content: '✓';
-            color: var(--teal-dark);
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        /* Štýl pre nadchádzajúci míľnik */
-        .next-up {
-            background-color: rgba(197, 76, 76, 0.1); /* Jemná tehlová */
-            border-left: 5px solid var(--brick);
-            font-weight: bold;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 0.8rem;
-            color: #888;
-            background-color: #f9f9f9;
+        /* --- ICONS (SVG) --- */
+        .icon { width: 18px; height: 18px; fill: currentColor; }
+        
+        @media (max-width: 480px) {
+            .weeks-big { font-size: 2.8rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .card.full-width { grid-column: auto; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="app-container">
+        
         <header>
-            <h1>Môj Syn</h1>
-            <div class="subtitle">Narodený: 31.10.2025 o 13:09</div>
+            <div class="header-top">
+                <div>
+                    <h1>Noel</h1>
+                    <div class="birth-info">31. október 2025, 13:09</div>
+                </div>
+                <div class="zodiac-badge">
+                    ♏ Škorpión
+                </div>
+            </div>
         </header>
 
-        <div class="main-counter">
-            <div id="weeks-count" class="weeks-display">0</div>
-            <div class="label">Týždňov</div>
+        <!-- HLAVNÝ POČÍTAČ -->
+        <div class="hero-card">
+            <div class="weeks-big" id="main-weeks">0</div>
+            <div class="weeks-label">Ukončených týždňov</div>
+            
+            <div class="detailed-age">
+                <div class="age-box">
+                    <strong id="age-months">0</strong>
+                    <span>Mesiacov</span>
+                </div>
+                <div class="age-box">
+                    <strong id="age-days">0</strong>
+                    <span>Dní</span>
+                </div>
+                <div class="age-box">
+                    <strong id="age-hours">0</strong>
+                    <span>Hodín</span>
+                </div>
+            </div>
         </div>
 
-        <div class="detailed-stats" id="detailed-stats">
-            Načítavam...
+        <!-- DASHBOARD GRID -->
+        <div class="dashboard-grid">
+            <!-- Najbližší míľnik -->
+            <div class="card full-width" style="border-left: 5px solid var(--brick-primary);">
+                <div class="card-title" style="color: var(--brick-primary);">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    Najbližší veľký míľnik
+                </div>
+                <div class="card-value" id="next-milestone-title">Načítavam...</div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 5px;" id="next-milestone-days">
+                    Zostáva X dní
+                </div>
+            </div>
+
+            <!-- Vývojová fáza -->
+            <div class="card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-1.1-.45-2.1-1.17-2.83l1.17-1.17 3 3 1.41-1.41L13.41 9.41 12 8V3z"/></svg>
+                    Aktuálne
+                </div>
+                <div class="card-value" style="font-size: 1rem;" id="current-phase">
+                    Spoznávanie sveta
+                </div>
+                <div style="font-size: 0.8rem; color: #888; margin-top: 5px;">
+                    Fáza bdenia
+                </div>
+            </div>
+
+            <!-- Do 1. narodenín -->
+            <div class="card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+                    1. Narodeniny
+                </div>
+                <div style="font-size: 0.8rem; color: #666;">Progress: <span id="year-percent">0%</span></div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-bar"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="milestones-section">
-            <h2>Míľniky</h2>
-            <ul class="milestone-list" id="milestones-list">
-                <!-- Míľniky sa vygenerujú cez JS -->
-            </ul>
+        <!-- TIMELINE -->
+        <div class="timeline-section">
+            <h2 class="section-header">Časová os vývoja</h2>
+            <div class="timeline" id="timeline-container">
+                <!-- Javascript fills this -->
+            </div>
         </div>
 
-        <div class="footer">
-            Aplikácia pre sledovanie rastu
-        </div>
     </div>
 
     <script>
-        // Konfigurácia
-        const birthDate = new Date('2025-10-31T13:09:00');
+        /* ----------------------------------------------------
+           DÁTA & LOGIKA (Mozog aplikácie)
+           ---------------------------------------------------- */
         
-        // Zoznam míľnikov (týždne sú približné pre výpočet)
-        const milestones = [
-            { weeks: 6, title: "Prvý sociálny úsmev" },
-            { weeks: 8, title: "Dvíhanie hlavičky na brušku" },
-            { weeks: 12, title: "Pasenie koníkov (istota)" },
-            { weeks: 16, title: "Pretáčanie z chrbta na bok" },
-            { weeks: 20, title: "Prvé ochutnávanie príkrmov" },
-            { weeks: 24, title: "Sed s oporou / Plazenie" },
-            { weeks: 32, title: "Štvornožkovanie" },
-            { weeks: 40, title: "Státie s oporou" },
-            { weeks: 52, title: "Prvé narodeniny & Prvé kroky" },
-            { weeks: 78, title: "Jeden a pol roka (18m)" },
-            { weeks: 104, title: "Druhé narodeniny" }
+        const BABY = {
+            name: "Syn",
+            birthDate: new Date('2025-10-31T13:09:00'),
+            gender: 'boy'
+        };
+
+        // Profesionálne dáta míľnikov (upravené pre chlapcov/všeobecné)
+        const MILESTONES = [
+            { weeks: 2, title: "Zraková fixácia", desc: "Začína krátko fixovať zrak na tvár rodiča.", type: "social" },
+            { weeks: 6, title: "Prvý sociálny úsmev", desc: "Usmievanie sa ako reakcia na tvoj hlas a tvár.", type: "social" },
+            { weeks: 9, title: "1. dávka Hexavakcína", desc: "Zvyčajne prvé očkovanie (Hexa + Pneumokoky).", type: "health" },
+            { weeks: 12, title: "Pasenie koníkov", desc: "V polohe na brušku drží hlavičku vysoko a pevne.", type: "motor" },
+            { weeks: 14, title: "Objavovanie rúk", desc: "Hrá sa s rukami, dáva si ich do úst, pozoruje ich.", type: "motor" },
+            { weeks: 16, title: "Smiech nahlas", desc: "Prvý hlasný smiech a výskanie.", type: "social" },
+            { weeks: 20, title: "Ochutnávanie príkrmov", desc: "Začiatok prikrmovania (zelenina).", type: "health" },
+            { weeks: 24, title: "Pretáčanie", desc: "Aktívne sa pretáča z chrbta na bruško a späť.", type: "motor" },
+            { weeks: 28, title: "Sed s oporou", desc: "Vydrží sedieť, keď ho podopriete.", type: "motor" },
+            { weeks: 32, title: "Štvornožkovanie / Plazenie", desc: "Začína sa pohybovať po miestnosti.", type: "motor" },
+            { weeks: 36, title: "Pinch úchop", desc: "Chytá malé predmety medzi palec a ukazovák.", type: "motor" },
+            { weeks: 40, title: "Státie s oporou", desc: "Vytiahne sa do stoja pri nábytku.", type: "motor" },
+            { weeks: 48, title: "Prvé slová", desc: "Mama, tata, baba - cielené.", type: "social" },
+            { weeks: 52, title: "1. Narodeniny & Kroky", desc: "Veľká oslava a možné prvé samostatné kroky.", type: "social" }
         ];
 
-        function updateTime() {
+        function getDeclension(number, type) {
+            // Pomocná funkcia pre skloňovanie
+            if (type === 'days') {
+                if (number === 1) return 'deň';
+                if (number >= 2 && number <= 4) return 'dni';
+                return 'dní';
+            }
+            if (type === 'weeks') {
+                if (number === 1) return 'týždeň';
+                if (number >= 2 && number <= 4) return 'týždne';
+                return 'týždňov';
+            }
+            return '';
+        }
+
+        function updateDashboard() {
             const now = new Date();
-            const diff = now - birthDate;
+            const diff = now - BABY.birthDate;
 
-            // Výpočet týždňov a dní
-            const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const weeks = Math.floor(totalDays / 7);
-            const extraDays = totalDays % 7;
-
-            // Výpočet presného veku (roky, mesiace, dni...)
-            let years = now.getFullYear() - birthDate.getFullYear();
-            let months = now.getMonth() - birthDate.getMonth();
-            let days = now.getDate() - birthDate.getDate();
+            // 1. Výpočet času
+            const totalSeconds = Math.floor(diff / 1000);
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            const totalHours = Math.floor(totalMinutes / 60);
+            const totalDays = Math.floor(totalHours / 24);
+            const currentWeeks = Math.floor(totalDays / 7);
+            
+            // Presný vek (Date method)
+            let years = now.getFullYear() - BABY.birthDate.getFullYear();
+            let months = now.getMonth() - BABY.birthDate.getMonth();
+            let days = now.getDate() - BABY.birthDate.getDate();
 
             if (days < 0) {
                 months--;
-                // Zistiť koľko dní mal predchádzajúci mesiac
                 const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
                 days += lastMonth.getDate();
             }
@@ -229,55 +464,86 @@
                 years--;
                 months += 12;
             }
+            const totalMonths = (years * 12) + months;
 
-            // Aktualizácia DOM elementov
-            document.getElementById('weeks-count').textContent = weeks;
-            
-            let detailedText = `Presne: ${weeks} týždňov a ${extraDays} dní.<br>`;
-            detailedText += `<small>(${months} mesiacov a ${days} dní)</small>`;
-            
-            document.getElementById('detailed-stats').innerHTML = detailedText;
+            // Aktualizácia DOM
+            document.getElementById('main-weeks').innerText = currentWeeks;
+            document.getElementById('age-months').innerText = totalMonths;
+            document.getElementById('age-days').innerText = days;
+            document.getElementById('age-hours').innerText = totalHours % 24;
 
-            renderMilestones(weeks);
+            // 2. Progress Bar (Rok = 52 týždňov)
+            const yearProgress = Math.min((currentWeeks / 52) * 100, 100).toFixed(1);
+            document.getElementById('progress-bar').style.width = `${yearProgress}%`;
+            document.getElementById('year-percent').innerText = `${yearProgress}%`;
+
+            // 3. Fáza podľa veku
+            const phaseElem = document.getElementById('current-phase');
+            if (currentWeeks < 12) phaseElem.innerText = "Štvrtý trimester";
+            else if (currentWeeks < 24) phaseElem.innerText = "Objavovanie tela";
+            else if (currentWeeks < 36) phaseElem.innerText = "Aktívny pohyb";
+            else phaseElem.innerText = "Malý prieskumník";
+
+            // 4. Míľniky renderovanie (iba pri načítaní alebo zmene dňa, aby sme neblikali)
+            // Pre jednoduchosť voláme vždy, moderné prehliadače to zvládnu
+            renderTimeline(currentWeeks, totalDays);
         }
 
-        function renderMilestones(currentWeeks) {
-            const list = document.getElementById('milestones-list');
-            list.innerHTML = ''; // Vyčistiť zoznam
-
+        function renderTimeline(currentWeeks, currentTotalDays) {
+            const container = document.getElementById('timeline-container');
+            const nextMilestoneTitle = document.getElementById('next-milestone-title');
+            const nextMilestoneDays = document.getElementById('next-milestone-days');
+            
+            let html = '';
             let nextFound = false;
 
-            milestones.forEach(m => {
-                const li = document.createElement('li');
-                li.className = 'milestone-item';
-
-                // Výpočet odhadovaného dátumu míľnika
-                const mDate = new Date(birthDate.getTime() + (m.weeks * 7 * 24 * 60 * 60 * 1000));
-                const dateStr = mDate.toLocaleDateString('sk-SK');
-
-                let statusClass = '';
+            MILESTONES.forEach((m) => {
+                const milestoneDate = new Date(BABY.birthDate.getTime() + (m.weeks * 7 * 24 * 60 * 60 * 1000));
+                const daysUntil = Math.ceil((milestoneDate - new Date()) / (1000 * 60 * 60 * 24));
+                const isCompleted = currentWeeks >= m.weeks;
                 
-                if (currentWeeks >= m.weeks) {
-                    statusClass = 'completed';
-                } else if (!nextFound) {
-                    statusClass = 'next-up';
+                // Určenie najbližšieho míľnika pre Dashboard kartu
+                if (!isCompleted && !nextFound) {
                     nextFound = true;
+                    nextMilestoneTitle.innerText = m.title;
+                    nextMilestoneTitle.classList.add('highlight-brick');
+                    nextMilestoneDays.innerText = (daysUntil <= 0) ? "Dnes/Zajtra" : `Už o ${daysUntil} ${getDeclension(daysUntil, 'days')}`;
                 }
 
-                if (statusClass) li.classList.add(statusClass);
+                // Generovanie HTML pre timeline
+                const statusClass = isCompleted ? 'completed' : 'upcoming';
+                const dateStr = milestoneDate.toLocaleDateString('sk-SK', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                // Tagy pre kategórie
+                let tagHtml = `<span class="tag ${m.type}">`;
+                if(m.type === 'motor') tagHtml += 'Pohyb';
+                if(m.type === 'health') tagHtml += 'Zdravie';
+                if(m.type === 'social') tagHtml += 'Vývoj';
+                tagHtml += `</span>`;
 
-                li.innerHTML = `
-                    <div class="milestone-date">${m.weeks}. týždeň<br><small>${dateStr}</small></div>
-                    <div class="milestone-desc">${m.title}</div>
+                html += `
+                <div class="timeline-item ${statusClass}">
+                    <div class="timeline-dot"></div>
+                    <div class="t-date">${m.weeks}. týždeň • ${dateStr}</div>
+                    <div class="t-title">${m.title}</div>
+                    <div class="t-desc">${m.desc}</div>
+                    ${tagHtml}
+                </div>
                 `;
-
-                list.appendChild(li);
             });
+
+            container.innerHTML = html;
+
+            if(!nextFound) {
+                nextMilestoneTitle.innerText = "Všetky ciele splnené!";
+                nextMilestoneDays.innerText = "Čas na nové dobrodružstvá";
+            }
         }
 
-        // Spustiť hneď a potom každú minútu (pre istotu)
-        updateTime();
-        setInterval(updateTime, 60000);
+        // Inicializácia
+        updateDashboard();
+        // Aktualizácia každú minútu
+        setInterval(updateDashboard, 60000);
 
     </script>
 </body>
