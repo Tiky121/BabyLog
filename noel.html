@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Môj Syn - Sledovanie veku</title>
+    <style>
+        :root {
+            /* Definícia farieb podľa požiadavky */
+            --teal-dark: #005f6b;   /* Tmavá petrolejová */
+            --teal-light: #e0f2f1;  /* Svetlá petrolejová (pozadie) */
+            --brick: #c54c4c;       /* Tehlová */
+            --brick-dark: #a03030;  /* Tmavšia tehlová */
+            --white: #ffffff;
+            --text-grey: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--teal-light);
+            color: var(--text-grey);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--white);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--teal-dark);
+            color: var(--white);
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .main-counter {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(to bottom, var(--white), var(--teal-light));
+        }
+
+        .weeks-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--brick);
+            line-height: 1;
+        }
+
+        .label {
+            font-size: 1.2rem;
+            color: var(--teal-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .detailed-stats {
+            text-align: center;
+            padding: 0 20px 20px;
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .milestones-section {
+            padding: 20px;
+        }
+
+        h2 {
+            color: var(--teal-dark);
+            border-bottom: 2px solid var(--brick);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .milestone-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .milestone-item:last-child {
+            border-bottom: none;
+        }
+
+        .milestone-date {
+            font-weight: bold;
+            color: var(--teal-dark);
+            width: 100px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .milestone-desc {
+            flex-grow: 1;
+        }
+
+        /* Štýl pre dosiahnuté míľniky */
+        .completed {
+            background-color: rgba(0, 95, 107, 0.1); /* Jemná petrolejová */
+            border-left: 5px solid var(--teal-dark);
+        }
+
+        .completed .milestone-desc {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .completed::after {
+            content: '✓';
+            color: var(--teal-dark);
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* Štýl pre nadchádzajúci míľnik */
+        .next-up {
+            background-color: rgba(197, 76, 76, 0.1); /* Jemná tehlová */
+            border-left: 5px solid var(--brick);
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: #888;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Môj Syn</h1>
+            <div class="subtitle">Narodený: 31.10.2025 o 13:09</div>
+        </header>
+
+        <div class="main-counter">
+            <div id="weeks-count" class="weeks-display">0</div>
+            <div class="label">Týždňov</div>
+        </div>
+
+        <div class="detailed-stats" id="detailed-stats">
+            Načítavam...
+        </div>
+
+        <div class="milestones-section">
+            <h2>Míľniky</h2>
+            <ul class="milestone-list" id="milestones-list">
+                <!-- Míľniky sa vygenerujú cez JS -->
+            </ul>
+        </div>
+
+        <div class="footer">
+            Aplikácia pre sledovanie rastu
+        </div>
+    </div>
+
+    <script>
+        // Konfigurácia
+        const birthDate = new Date('2025-10-31T13:09:00');
+        
+        // Zoznam míľnikov (týždne sú približné pre výpočet)
+        const milestones = [
+            { weeks: 6, title: "Prvý sociálny úsmev" },
+            { weeks: 8, title: "Dvíhanie hlavičky na brušku" },
+            { weeks: 12, title: "Pasenie koníkov (istota)" },
+            { weeks: 16, title: "Pretáčanie z chrbta na bok" },
+            { weeks: 20, title: "Prvé ochutnávanie príkrmov" },
+            { weeks: 24, title: "Sed s oporou / Plazenie" },
+            { weeks: 32, title: "Štvornožkovanie" },
+            { weeks: 40, title: "Státie s oporou" },
+            { weeks: 52, title: "Prvé narodeniny & Prvé kroky" },
+            { weeks: 78, title: "Jeden a pol roka (18m)" },
+            { weeks: 104, title: "Druhé narodeniny" }
+        ];
+
+        function updateTime() {
+            const now = new Date();
+            const diff = now - birthDate;
+
+            // Výpočet týždňov a dní
+            const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const weeks = Math.floor(totalDays / 7);
+            const extraDays = totalDays % 7;
+
+            // Výpočet presného veku (roky, mesiace, dni...)
+            let years = now.getFullYear() - birthDate.getFullYear();
+            let months = now.getMonth() - birthDate.getMonth();
+            let days = now.getDate() - birthDate.getDate();
+
+            if (days < 0) {
+                months--;
+                // Zistiť koľko dní mal predchádzajúci mesiac
+                const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += lastMonth.getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            // Aktualizácia DOM elementov
+            document.getElementById('weeks-count').textContent = weeks;
+            
+            let detailedText = `Presne: ${weeks} týždňov a ${extraDays} dní.<br>`;
+            detailedText += `<small>(${months} mesiacov a ${days} dní)</small>`;
+            
+            document.getElementById('detailed-stats').innerHTML = detailedText;
+
+            renderMilestones(weeks);
+        }
+
+        function renderMilestones(currentWeeks) {
+            const list = document.getElementById('milestones-list');
+            list.innerHTML = ''; // Vyčistiť zoznam
+
+            let nextFound = false;
+
+            milestones.forEach(m => {
+                const li = document.createElement('li');
+                li.className = 'milestone-item';
+
+                // Výpočet odhadovaného dátumu míľnika
+                const mDate = new Date(birthDate.getTime() + (m.weeks * 7 * 24 * 60 * 60 * 1000));
+                const dateStr = mDate.toLocaleDateString('sk-SK');
+
+                let statusClass = '';
+                
+                if (currentWeeks >= m.weeks) {
+                    statusClass = 'completed';
+                } else if (!nextFound) {
+                    statusClass = 'next-up';
+                    nextFound = true;
+                }
+
+                if (statusClass) li.classList.add(statusClass);
+
+                li.innerHTML = `
+                    <div class="milestone-date">${m.weeks}. týždeň<br><small>${dateStr}</small></div>
+                    <div class="milestone-desc">${m.title}</div>
+                `;
+
+                list.appendChild(li);
+            });
+        }
+
+        // Spustiť hneď a potom každú minútu (pre istotu)
+        updateTime();
+        setInterval(updateTime, 60000);
+
+    </script>
+</body>
+</html>
