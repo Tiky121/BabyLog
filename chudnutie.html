@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalórie PRO | Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #2196F3; /* Modrá */
+            --accent-danger: #f44336; /* Červená pre surplus */
+            --accent-success: #4caf50; /* Zelená pre deficit */
+            --border-radius: 12px;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* HEADER */
+        .header {
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            margin: 0 0 5px 0;
+            font-weight: 800;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* DASHBOARD CARD */
+        .dashboard-card {
+            background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .dashboard-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .big-number {
+            font-size: 36px;
+            font-weight: 800;
+            margin: 10px 0;
+            color: var(--text-main);
+        }
+
+        .big-number.positive { color: var(--accent-danger); }
+        .big-number.negative { color: var(--accent-success); }
+
+        .progress-container {
+            background-color: #333;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #81c784);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        /* INPUT SECTION */
+        .section-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 5px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .input-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: #121212;
+            border: 1px solid #333;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+
+        .range-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-value {
+            font-weight: bold;
+            color: var(--accent);
+            min-width: 40px;
+        }
+
+        .btn-add {
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-add:active {
+            transform: scale(0.98);
+        }
+
+        /* HISTORY TABLE */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .date-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-name { font-weight: 600; color: var(--text-main); }
+        .day-date { font-size: 12px; color: var(--text-muted); }
+
+        .numbers-col {
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .numbers-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .net-result {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        
+        .net-result.neg { color: var(--accent-success); }
+        .net-result.pos { color: var(--accent-danger); }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 18px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .btn-delete:hover { color: var(--accent-danger); }
+
+        /* EXPORT AREA */
+        .export-wrapper {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .btn-secondary {
+            background: #333;
+            color: var(--text-muted);
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        #exportArea {
+            width: 100%;
+            background: #111;
+            color: #aaa;
+            border: 1px solid #333;
+            margin-top: 15px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            display: none;
+            height: 150px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Môj Deficit: PRO</h1>
+        <p>Cieľ: -0.7kg týždenne (-5000 kcal)</p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="dashboard-card">
+        <div class="dashboard-title">Aktuálny týždeň (Konzervatívny odhad)</div>
+        <div id="weeklyTotal" class="big-number">0 kcal</div>
+        <div class="progress-container">
+            <div id="weeklyProgress" class="progress-bar"></div>
+        </div>
+        <div class="stats-row">
+            <span>Cieľ: <strong style="color:var(--text-main)">-5000</strong></span>
+            <span>Ostáva: <strong id="remainingTarget" style="color:var(--text-main)">5000</strong></span>
+        </div>
+        <div style="margin-top:10px; font-size:11px; color:#555;">
+            *Započítaná odchýlka chybovosti merania
+        </div>
+    </div>
+
+    <!-- FORMULAR -->
+    <div class="section-label">DNEŠNÝ ZÁZNAM</div>
+    <div class="input-card">
+        <div class="form-group">
+            <label>Dátum</label>
+            <input type="date" id="dateInput" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label>Prijaté Kalórie (Jedlo)</label>
+            <input type="number" id="intakeInput" class="form-input" placeholder="napr. 2200">
+        </div>
+
+        <div class="form-group">
+            <label>Celkový Výdaj (TDEE: Kľudový + Aktivita)</label>
+            <input type="number" id="burnInput" class="form-input" placeholder="napr. 2800">
+        </div>
+
+        <div class="form-group">
+            <label>Miera nepresnosti (%) - Bezpečnostná rezerva</label>
+            <div class="range-wrap">
+                <input type="range" id="marginInput" min="0" max="20" value="10" style="flex-grow:1">
+                <span id="marginVal" class="range-value">10%</span>
+            </div>
+            <p style="font-size:11px; color:#555; margin-top:5px;">
+                Tip: 10% znamená, že započítame o 10% viac jedla a o 10% menej pohybu pre istotu.
+            </p>
+        </div>
+
+        <button class="btn-add" onclick="addEntry()">Zapísať deň</button>
+    </div>
+
+    <!-- ZOZNAM -->
+    <div class="section-label">PREHĽAD TÝŽDŇA</div>
+    <ul id="historyList" class="history-list">
+        <!-- Položky sa pridajú cez JS -->
+    </ul>
+
+    <!-- EXPORT -->
+    <div class="export-wrapper">
+        <button class="btn-secondary" onclick="exportData()">Exportovať do tabuľky</button>
+        <button class="btn-secondary" onclick="resetData()" style="color:#f44336; border-color:#522">Reset</button>
+        <textarea id="exportArea" readonly></textarea>
+    </div>
+
+    <script>
+        // Nastavenia
+        const TARGET_DEFICIT = 5000; // Cieľ na týždeň (cca 0.7kg)
+        
+        // Inicializácia
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('dateInput').valueAsDate = new Date();
+            loadData();
+            
+            // Slider event
+            document.getElementById('marginInput').addEventListener('input', function() {
+                document.getElementById('marginVal').textContent = this.value + '%';
+            });
+        });
+
+        // Načítanie dát
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('calorieDataPRO')) || [];
+            renderList(data);
+            calculateStats(data);
+        }
+
+        // Pridanie záznamu
+        function addEntry() {
+            const date = document.getElementById('dateInput').value;
+            const intake = parseFloat(document.getElementById('intakeInput').value);
+            const burn = parseFloat(document.getElementById('burnInput').value);
+            const margin = parseFloat(document.getElementById('marginInput').value);
+
+            if (!date || isNaN(intake) || isNaN(burn)) {
+                alert("Vyplň prosím dátum, príjem a výdaj.");
+                return;
+            }
+
+            const entry = {
+                id: Date.now(),
+                date: date,
+                intake: intake,
+                burn: burn,
+                margin: margin
+            };
+
+            let data = JSON.parse(localStorage.getItem('calorieDataPRO')) || [];
+            
+            // Kontrola či už existuje záznam pre tento deň (ak áno, prepíšeme ho)
+            const existingIndex = data.findIndex(item => item.date === date);
+            if (existingIndex > -1) {
+                if(confirm("Pre tento dátum už existuje záznam. Prepísať?")) {
+                    data[existingIndex] = entry;
+                } else {
+                    return;
+                }
+            } else {
+                data.push(entry);
+            }
+
+            // Zoradiť podľa dátumu (najnovší hore)
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            localStorage.setItem('calorieDataPRO', JSON.stringify(data));
+            
+            // Reset formulára
+            document.getElementById('intakeInput').value = '';
+            document.getElementById('burnInput').value = '';
+            
+            loadData();
+        }
+
+        // Výpočet "Bezpečného Deficitu"
+        function calculateSafeDeficit(intake, burn, marginPercent) {
+            // Pesimistický scenár: Zjedol si viac (+margin), spálil si menej (-margin)
+            const adjustedIntake = intake * (1 + (marginPercent / 100));
+            const adjustedBurn = burn * (1 - (marginPercent / 100));
+            return Math.round(adjustedIntake - adjustedBurn);
+        }
+
+        // Zobrazenie zoznamu
+        function renderList(data) {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            // Filter len pre aktuálny týždeň (voliteľné, teraz zobrazíme všetko zoradené)
+            // Pre jednoduchosť zobrazíme posledných 7 záznamov alebo celý týždeň
+            
+            data.forEach(item => {
+                const deficit = calculateSafeDeficit(item.intake, item.burn, item.margin);
+                const isDeficit = deficit < 0;
+                const sign = isDeficit ? '' : '+';
+                const colorClass = isDeficit ? 'neg' : 'pos';
+
+                const dateObj = new Date(item.date);
+                const dayName = dateObj.toLocaleDateString('sk-SK', { weekday: 'long' });
+                const dateStr = dateObj.toLocaleDateString('sk-SK');
+
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.innerHTML = `
+                    <div class="date-col">
+                        <span class="day-name">${dayName}</span>
+                        <span class="day-date">${dateStr}</span>
+                    </div>
+                    <div class="numbers-col">
+                        <span class="net-result ${colorClass}">${sign}${deficit} kcal</span>
+                        <span class="numbers-detail">In: ${item.intake} | Out: ${item.burn} (±${item.margin}%)</span>
+                    </div>
+                    <button class="btn-delete" onclick="deleteEntry(${item.id})">&times;</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        // Výpočet štatistík
+        function calculateStats(data) {
+            // Získame začiatok aktuálneho týždňa (Pondelok)
+            const now = new Date();
+            const day = now.getDay() || 7; // Ne - 0, zmeníme na 7
+            if(day !== 1) now.setHours(-24 * (day - 1)); // Nastav na pondelok
+            const mondayStr = now.toISOString().split('T')[0];
+
+            let weeklySum = 0;
+
+            data.forEach(item => {
+                // Ak je dátum záznamu >= Pondelok tohto týždňa
+                // Jednoduché porovnanie stringov funguje pre ISO formát
+                // (Pre presnejšie by sme mali porovnávať Date objekty, ale toto postačí pre lokálne použitie)
+                if (item.date >= mondayStr) {
+                    weeklySum += calculateSafeDeficit(item.intake, item.burn, item.margin);
+                }
+            });
+
+            const totalEl = document.getElementById('weeklyTotal');
+            const progressEl = document.getElementById('weeklyProgress');
+            const remainingEl = document.getElementById('remainingTarget');
+
+            totalEl.innerHTML = `${weeklySum} kcal`;
+            
+            if (weeklySum < 0) {
+                totalEl.classList.add('negative');
+                totalEl.classList.remove('positive');
+                
+                // Progress bar (cieľ je záporné číslo, napr -5000)
+                // Ak mám -2500, som na 50%
+                let percentage = (weeklySum / -TARGET_DEFICIT) * 100;
+                if (percentage > 100) percentage = 100;
+                progressEl.style.width = percentage + '%';
+                
+                let remaining = -TARGET_DEFICIT - weeklySum;
+                if (remaining > 0) remaining = 0; // Už sme splnili
+                remainingEl.textContent = remaining + " kcal";
+
+            } else {
+                totalEl.classList.add('positive');
+                totalEl.classList.remove('negative');
+                progressEl.style.width = '0%';
+                remainingEl.textContent = TARGET_DEFICIT + " kcal";
+            }
+        }
+
+        function deleteEntry(id) {
+            if(confirm('Vymazať tento záznam?')) {
+                let data = JSON.parse(localStorage.getItem('calorieDataPRO')) || [];
+                data = data.filter(item => item.id !== id);
+                localStorage.setItem('calorieDataPRO', JSON.stringify(data));
+                loadData();
+            }
+        }
+
+        function resetData() {
+            if(confirm('Naozaj chceš vymazať celú históriu?')) {
+                localStorage.removeItem('calorieDataPRO');
+                loadData();
+            }
+        }
+
+        function exportData() {
+            const data = JSON.parse(localStorage.getItem('calorieDataPRO')) || [];
+            let csvContent = "Dátum;Prijaté;Spálené;Odchýlka%;RealDeficit\n";
+            
+            data.forEach(item => {
+                const def = calculateSafeDeficit(item.intake, item.burn, item.margin);
+                csvContent += `${item.date};${item.intake};${item.burn};${item.margin};${def}\n`;
+            });
+
+            const textArea = document.getElementById('exportArea');
+            textArea.value = csvContent;
+            textArea.style.display = 'block';
+            textArea.select();
+            document.execCommand('copy');
+            alert("Dáta boli skopírované do schránky! (Formát pre Excel/CSV)");
+        }
+    </script>
+</body>
+</html>
