@@ -145,6 +145,22 @@
     }
     .delete-btn:hover { background: #fff0f0; }
 
+    .interval-btn {
+      width: 100%;
+      max-width: 400px;
+      margin: -12px 0 20px;
+      padding: 10px;
+      border: 2px dashed #ffb3b3;
+      border-radius: var(--radius);
+      background: #fff;
+      font-family: inherit;
+      font-size: 0.95em;
+      color: #555;
+      cursor: pointer;
+    }
+    .interval-btn:hover { background: #fff0f0; }
+    .interval-btn b { color: #e65c5c; }
+
     .last-update { font-size: 0.9em; color: #888; margin-top: 10px; text-align: center; }
     .loading { text-align: center; color: #888; font-style: italic; }
 
@@ -168,6 +184,10 @@
       <span id="vitaminStatus" class="info-value vitamin-status">❌ Nie</span>
     </div>
   </div>
+
+  <button class="interval-btn" id="intervalBtn" title="Klikni pre zmenu intervalu">
+    ⏱️ Papanie každých <b id="intervalValue">--</b> ✏️
+  </button>
 
   <div class="buttons">
     <button class="action-btn feed">🍼 Papanie</button>
@@ -204,6 +224,15 @@
     const logsRef = ref(db, 'logs'); 
     const nextFeedRef = ref(db, 'nextFeed');
     const vitaminRef = ref(db, 'vitaminD');
+    const intervalRef = ref(db, 'settings/feedIntervalMinutes');
+
+    const DEFAULT_INTERVAL_MIN = 135; // 2 h 15 min (pôvodná hodnota 2.25 h)
+    let feedIntervalMinutes = DEFAULT_INTERVAL_MIN;
+    let intervalLoaded = false;
+    let latestLogs = null; // posledné načítané logy (pre prepočet pri zmene intervalu)
+
+    const intervalBtn = document.getElementById('intervalBtn');
+    const intervalValueEl = document.getElementById('intervalValue');
 
     const logContainer = document.getElementById('log');
     const lastUpdateEl = document.getElementById('last-update');
@@ -238,6 +267,50 @@
       }
     });
 
+    // 1b. Interval medzi papaniami (uložený v databáze, zdieľaný pre všetky zariadenia)
+    function formatInterval(totalMin) {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      if (h === 0) return `${m} min`;
+      return m === 0 ? `${h} h` : `${h} h ${m} min`;
+    }
+
+    // Prijíma "2:15", "2.25", "2,5", "3" (hodiny)
+    function parseInterval(input) {
+      const s = String(input).trim().replace(',', '.');
+      let match = s.match(/^(\d{1,2}):(\d{1,2})$/);
+      if (match) {
+        const min = Number(match[2]);
+        if (min >= 60) return null;
+        return Number(match[1]) * 60 + min;
+      }
+      if (/^\d+(\.\d+)?$/.test(s)) return Math.round(parseFloat(s) * 60);
+      return null;
+    }
+
+    onValue(intervalRef, (snapshot) => {
+      const val = Number(snapshot.val());
+      feedIntervalMinutes = val > 0 ? val : DEFAULT_INTERVAL_MIN;
+      intervalLoaded = true;
+      intervalValueEl.textContent = formatInterval(feedIntervalMinutes);
+      // Pri zmene intervalu hneď prepočítaj ďalšie papanie
+      if (latestLogs) recalculateNextFeed(latestLogs);
+    });
+
+    intervalBtn.addEventListener('click', () => {
+      const current = `${Math.floor(feedIntervalMinutes / 60)}:${String(feedIntervalMinutes % 60).padStart(2, '0')}`;
+      const input = prompt('Interval medzi papaniami (napr. 2:15 alebo 2.5 h):', current);
+      if (input === null) return;
+      const minutes = parseInterval(input);
+      if (minutes === null || minutes < 15 || minutes > 12 * 60) {
+        alert('Neplatný interval. Zadaj napr. 2:15, 2.5 alebo 3 (rozsah 0:15 – 12:00).');
+        return;
+      }
+      if (minutes !== feedIntervalMinutes) {
+        set(intervalRef, minutes).catch((error) => alert('Chyba: ' + error.message));
+      }
+    });
+
     // 2. Ďalšie papanie - Len zobrazovanie (výpočet je nižšie)
     onValue(nextFeedRef, (snapshot) => {
       const time = snapshot.val();
@@ -266,7 +339,8 @@
         logsArray.sort((a, b) => b.timestamp - a.timestamp);
 
         // --- AUTOMATICKÝ PREPOČET ĎALŠIEHO PAPANIA ---
-        recalculateNextFeed(logsArray);
+        latestLogs = logsArray;
+        if (intervalLoaded) recalculateNextFeed(logsArray); // inak sa prepočíta po načítaní intervalu
         // ----------------------------------------------
 
         // Vykreslenie (cyklus ide od najnovšieho po najstaršie, ale prepend dáva najnovšie hore)
@@ -306,6 +380,7 @@
 
       } else {
         // Ak nie sú žiadne logy, vymaž aj čas papania
+        latestLogs = [];
         set(nextFeedRef, null);
         logContainer.innerHTML = '<div class="loading">Žiadne záznamy</div>';
       }
@@ -331,8 +406,8 @@
         const feedDate = new Date();
         feedDate.setHours(hours, minutes, 0, 0);
         
-        // Pridáme 2.15 hodiny (2h 9m = 2.15 * 60 * 60 * 1000 ms)
-        const nextFeedDate = new Date(feedDate.getTime() + 2.25 * 60 * 60 * 1000);
+        // Pridáme nastavený interval (v minútach, z databázy)
+        const nextFeedDate = new Date(feedDate.getTime() + feedIntervalMinutes * 60 * 1000);
         
         const nextFeedString = getTime(nextFeedDate);
         
